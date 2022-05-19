@@ -181,8 +181,21 @@ Or you like so separate your unit tests and acceptance tests into folders `utest
 
 #### Unit Tests
 
-Use a Unit Testing Framework like `unittest` or `pytest` to write unit tests.
+Use a Unit Testing Framework like `unittest` or `pytest` to write unit tests.  
 The filename starts with `test_` and the test function name starts with `test_`.
+
+You can run them with
+
+```shell
+python -m pytest  utest/"
+```	
+or via coverage
+```shell
+coverage run --source=MyFirstLibrary -p -m pytest utest/
+coverage report
+coverage html
+```
+
 
 ```python
 from pathlib import Path
