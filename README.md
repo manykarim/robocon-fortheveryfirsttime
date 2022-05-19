@@ -113,19 +113,124 @@ If the current version is `1.2.3`:
 ### Documentation
 #### Documentation of the Library
 
+The documentation of the Library is added as Docstrings to the Python source code.  
+Depending on the location of the documentation, it can be added to the `README.md` file or to the keyword documentation `docs/myfirstlibrary.html` file which is hosted via GitHub Pages.  
+
+```python
+class MyFirstLibrary:
+    """
+    This is a DocString for the Keyword Documentation.  
+    It can explain some general things, like what the Library does and how it works.  
+
+    Also the options to import the Library can be explained here with examples.
+
+    """
+    def __init__(self) -> None:
+        cascade_path = os.path.join(os.path.dirname(__file__), 'haarcascade_frontalface_default.xml')
+        self.face_cascade = cv2.CascadeClassifier(cascade_path)
+```
+
 #### Documentation of the Keywords
+
+The documentation of the Keywords is added as Docstrings to the Python source code.
+
+It can later be converted to a keyword documentation file with 
+
+```shell
+python -m robot.libdoc MyFirstLibrary
+```
+
+```python
+    def is_face_in_image(self, img: str):
+        """Returns ``True`` if a face is detected in the image ``img``, ``False`` otherwise.  
+
+        ``img``: The path to the image
+
+        Example:
+
+        | Should Contain A Face | faces.png |
+        | Should Contain A Face | ${CURDIR}/another_face.jpg |
+        """
+        img = cv2.imread(img)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+        if len(faces)>0:
+            return True
+        else:
+            return False
+```
 
 #### Hosting the Documentation via GitHub Pages
 
+Store the generated documentation in a folder called `docs`.
+Enable GitHub Pages for the repository and select the folder `docs` as the source.
+
+![image](img/github_pages.png)
+
+
 ### Tests
+
+I recommend a combination of *Unit Tests* and *Acceptance Tests*.
+The goal of Unit Tests is to achieve a high level of code coverage and to cover all functions of the library in depth.  
+The goal of Acceptance Tests is to test the functionality of the library in real world scenarios. It's also serves as some living documentation.
+
+There are different approaches how your tests can be organized.  
+Maybe you prefer a single `tests/` folder to store all your tests.
+
+Or you like so separate your unit tests and acceptance tests into folders `utest/` and `atest/`. 
 
 #### Unit Tests
 
 Use a Unit Testing Framework like `unittest` or `pytest` to write unit tests.
+The filename starts with `test_` and the test function name starts with `test_`.
+
+```python
+from pathlib import Path
+from MyFirstLibrary import MyFirstLibrary
+import pytest
+
+testdata_directory = Path(__file__).parent.resolve() / "testdata"
+face_detector = MyFirstLibrary()
+image_with_face = str(testdata_directory /'faces.png')
+image_without_face = str(testdata_directory /'no_faces.jpg')
+
+def test_image_should_contain_a_face():
+    assert face_detector.is_face_in_image(image_with_face) == True
+    face_detector.should_contain_a_face(image_with_face)
+
+def test_image_should_not_contain_a_face():
+    assert face_detector.is_face_in_image(image_without_face) == False
+    face_detector.should_not_contain_a_face(image_without_face)
+
+def test_assertion_error_should_be_raised():
+    with pytest.raises(AssertionError):
+        face_detector.should_contain_a_face(image_without_face)
+    with pytest.raises(AssertionError):
+        face_detector.should_not_contain_a_face(image_with_face)
+```
 
 #### Acceptance Tests
 
 Use Robot Framework to write acceptance tests.
+
+```robot
+*** Settings ***
+Library    MyFirstLibrary
+
+*** Variables ***
+${TESTDATA}    ${CURDIR}/testdata
+${image_with_face}    ${TESTDATA}/faces.png
+${image_without_face}    ${TESTDATA}/no_faces.jpg
+${no_face_detected_error}    Image should contain a face. But no face was detected
+${face_detected_error}    Image should NOT contain a face. But it contains a face
+
+*** Test Cases ***
+Image Should Contain Face
+    Should Contain A Face    ${image_with_face}
+
+Image Should Not Contain A Face
+    Should Not Contain A Face    ${image_without_face}
+```
 
 #### Coverage
 
@@ -156,6 +261,44 @@ Use the included `tasks.py` file to automate the recurring tasks via the `invoke
 invoke tests
 invoke libdoc
 invoke readme
+```
+
+```python
+ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
+VERSION = version("robotframework-myfirstlibrary")
+
+@task
+def utests(context):
+    cmd = [
+        "coverage",
+        "run",
+        "--source=MyFirstLibrary",
+        "-p",
+        "-m",
+        "pytest",
+        f"{ROOT}/utest",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+@task
+def atests(context):
+    cmd = [
+        "coverage",
+        "run",
+        "--source=MyFirstLibrary",
+        "-p",
+        "-m",
+        "robot",
+        "--loglevel=TRACE:DEBUG",
+        f"{ROOT}/atest",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+@task(utests, atests)
+def tests(context):
+    subprocess.run("coverage combine", shell=True, check=False)
+    subprocess.run("coverage report", shell=True, check=False)
+    subprocess.run("coverage html", shell=True, check=False)
 ```
 
 
