@@ -4,6 +4,8 @@ The talk will describe how to release a new Robot Framework Library to the commu
 The goal is to have a package which can be installed with
 ``pip install robotframework-myfirstlibrary``.  
 
+You can find the example library which is used during the talk [here](https://github.com/manykarim/robotframework-facelibrary)
+
 ## Releasing is more than just Coding..
 
 Releasing a Robot Framework Library to the public is more then just a bit of coding in Python.  
