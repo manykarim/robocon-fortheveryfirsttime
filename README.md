@@ -264,6 +264,41 @@ coverage report
 coverage html
 ```    
 
+### Build
+
+Run the build with `poetry build`.  
+Files will be stored in `dist/`.
+
+```shell
+poetry build 
+```
+
+### Publish
+
+#### Poetry PyPI Configuration
+
+Add TestPyPI configuration
+
+```shell
+poetry config repositories.test-pypi https://test.pypi.org/legacy/
+poetry config pypi-token.test-pypi <your-token>
+```
+
+#### Publish to PyPI
+
+Run the publish with `poetry publish`.
+
+```shell
+poetry publish
+```
+
+Publish the package to TestPyPI
+
+```shell
+poetry build
+poetry publish -r test-pypi 
+```	
+
 ### Continuous Integration
 
 Use GitHub Actions to automate the release process.
